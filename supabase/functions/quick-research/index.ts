@@ -65,20 +65,21 @@ const TICKER_MAP: Record<string, { symbol: string; unit?: string }> = {
 
 async function fetchYahooPrice(symbol: string): Promise<{ price: number | null; currency: string }> {
   try {
-    const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbol)}`;
+    // Use v8 chart endpoint — works without authentication
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=1d&interval=1d`;
     const resp = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0" },
+      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" },
     });
     if (!resp.ok) {
-      console.error(`Yahoo Finance returned ${resp.status} for ${symbol}`);
+      console.error(`Yahoo Finance v8 returned ${resp.status} for ${symbol}`);
       return { price: null, currency: "INR" };
     }
     const data = await resp.json();
-    const quote = data?.quoteResponse?.result?.[0];
-    if (!quote) return { price: null, currency: "INR" };
+    const meta = data?.chart?.result?.[0]?.meta;
+    if (!meta) return { price: null, currency: "INR" };
     return {
-      price: quote.regularMarketPrice ?? null,
-      currency: quote.currency ?? "INR",
+      price: meta.regularMarketPrice ?? null,
+      currency: meta.currency ?? "INR",
     };
   } catch (e) {
     console.error(`Failed to fetch Yahoo price for ${symbol}:`, e);
