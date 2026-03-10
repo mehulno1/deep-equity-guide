@@ -156,6 +156,9 @@ const QuickReport = () => {
           <div>
             <p className="text-sm text-muted-foreground">Current Price</p>
             <p className="text-3xl font-mono font-bold text-foreground">{report.currentPrice}</p>
+            <Badge variant={priceSource === "yahoo-finance" ? "default" : "secondary"} className="mt-1 text-[10px]">
+              {priceSource === "yahoo-finance" ? "Live Price" : "AI Estimated"}
+            </Badge>
           </div>
           <Card className={`border ${vc.bg}`}>
             <CardContent className="p-4 flex items-center gap-3">
