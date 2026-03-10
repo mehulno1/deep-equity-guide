@@ -64,6 +64,7 @@ const QuickReport = () => {
         }
 
         setReport(functionData.report as QuickResearchReport);
+        setPriceSource(functionData.report?.priceSource || "ai-estimated");
       } catch (err: any) {
         console.error("Quick research error:", err);
         setError(err.message || "Failed to generate report");
