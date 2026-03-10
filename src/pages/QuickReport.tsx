@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { QuickResearchReport, AssetType } from "@/types/investment";
-import { generateQuickReport } from "@/lib/mock-quick-report";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, TrendingUp, BarChart3, Globe, Activity, Eye, CheckCircle, AlertTriangle, MinusCircle } from "lucide-react";
+import { ArrowLeft, TrendingUp, BarChart3, Globe, Activity, Eye, CheckCircle, AlertTriangle, MinusCircle, Search, Share2, Copy } from "lucide-react";
+import { toast } from "sonner";
 
 const verdictConfig = {
   Buy: { color: "text-success", bg: "bg-success/10 border-success/30", icon: CheckCircle },
@@ -18,31 +19,101 @@ const QuickReport = () => {
   const navigate = useNavigate();
   const [report, setReport] = useState<QuickResearchReport | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [loadingStep, setLoadingStep] = useState(0);
+
+  const loadingSteps = [
+    "Analyzing market data...",
+    "Running fundamental analysis...",
+    "Evaluating technical indicators...",
+    "Assessing geopolitical factors...",
+    "Generating verdict...",
+  ];
 
   useEffect(() => {
-    const data = sessionStorage.getItem("quickResearchData");
-    let assetType: AssetType = "stock";
-    if (data) {
-      const parsed = JSON.parse(data);
-      assetType = parsed.assetType;
-    }
+    const interval = setInterval(() => {
+      setLoadingStep((prev) => (prev < loadingSteps.length - 1 ? prev + 1 : prev));
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
 
-    // Simulate loading
-    const timer = setTimeout(() => {
-      const result = generateQuickReport(decodeURIComponent(name || ""), assetType);
-      setReport(result);
-      setLoading(false);
-    }, 1500);
+  useEffect(() => {
+    const fetchReport = async () => {
+      const data = sessionStorage.getItem("quickResearchData");
+      let assetType: AssetType = "stock";
+      if (data) {
+        const parsed = JSON.parse(data);
+        assetType = parsed.assetType;
+      }
 
-    return () => clearTimeout(timer);
+      const decodedName = decodeURIComponent(name || "");
+
+      try {
+        const { data: functionData, error: functionError } = await supabase.functions.invoke("quick-research", {
+          body: { name: decodedName, assetType },
+        });
+
+        if (functionError) {
+          throw new Error(functionError.message || "AI analysis failed");
+        }
+
+        if (functionData?.error) {
+          throw new Error(functionData.error);
+        }
+
+        setReport(functionData.report as QuickResearchReport);
+      } catch (err: any) {
+        console.error("Quick research error:", err);
+        setError(err.message || "Failed to generate report");
+        toast.error(err.message || "Failed to generate report");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReport();
   }, [name]);
+
+  const handleCopyReport = () => {
+    if (!report) return;
+    const text = `${report.name} - AI Research Report\n\nVerdict: ${report.verdict}\nPrice: ${report.currentPrice}\n\n${report.overview}\n\n${report.verdictRationale}`;
+    navigator.clipboard.writeText(text);
+    toast.success("Report copied to clipboard");
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-sm text-muted-foreground font-mono">Researching {decodeURIComponent(name || "")}...</p>
+        <div className="text-center space-y-6 max-w-sm">
+          <div className="h-10 w-10 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+          <div className="space-y-2">
+            <p className="text-lg font-semibold text-foreground">Analyzing {decodeURIComponent(name || "")}</p>
+            <p className="text-sm text-muted-foreground font-narrative animate-pulse">{loadingSteps[loadingStep]}</p>
+          </div>
+          <div className="flex gap-1 justify-center">
+            {loadingSteps.map((_, i) => (
+              <div key={i} className={`h-1.5 w-8 rounded-full transition-all duration-500 ${i <= loadingStep ? "bg-primary" : "bg-secondary"}`} />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4 max-w-md px-6">
+          <AlertTriangle className="h-12 w-12 text-destructive mx-auto" />
+          <h2 className="text-xl font-bold text-foreground">Analysis Failed</h2>
+          <p className="text-sm text-muted-foreground">{error}</p>
+          <div className="flex gap-3 justify-center">
+            <Button variant="outline" onClick={() => navigate("/quick-research")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Go Back
+            </Button>
+            <Button onClick={() => window.location.reload()}>Try Again</Button>
+          </div>
         </div>
       </div>
     );
@@ -67,10 +138,13 @@ const QuickReport = () => {
         <Button variant="ghost" size="icon" onClick={() => navigate("/quick-research")}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <div>
+        <div className="flex-1">
           <span className="text-lg font-semibold text-foreground">{report.name}</span>
           <p className="text-xs text-muted-foreground">{report.exchange} · {report.category}</p>
         </div>
+        <Button variant="ghost" size="icon" onClick={handleCopyReport} title="Copy report">
+          <Copy className="h-4 w-4" />
+        </Button>
       </header>
 
       <main className="max-w-3xl mx-auto px-6 py-8 space-y-8">
@@ -118,9 +192,22 @@ const QuickReport = () => {
           <p className="font-narrative text-base leading-relaxed text-foreground/90">{report.verdictRationale}</p>
         </section>
 
-        <div className="mt-12 p-4 rounded-lg bg-secondary/50 border border-border/50">
+        {/* Research Another Asset CTA */}
+        <Card className="border-primary/20 bg-secondary/50">
+          <CardContent className="p-6 flex flex-col items-center gap-4">
+            <p className="text-sm text-muted-foreground text-center">
+              Want to analyze another asset?
+            </p>
+            <Button size="lg" variant="outline" className="h-12 px-8" onClick={() => navigate("/quick-research")}>
+              <Search className="mr-2 h-5 w-5" />
+              Research Another Asset
+            </Button>
+          </CardContent>
+        </Card>
+
+        <div className="p-4 rounded-lg bg-secondary/50 border border-border/50">
           <p className="text-xs text-muted-foreground text-center">
-            This report is generated for personal research purposes only. It does not constitute financial advice.
+            This report is AI-generated for personal research purposes only. It does not constitute financial advice. Always consult a qualified financial advisor.
           </p>
         </div>
       </main>
