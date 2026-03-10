@@ -45,8 +45,12 @@ const Report = () => {
   useEffect(() => {
     const reports: ResearchReport[] = JSON.parse(localStorage.getItem("reports") || "[]");
     const found = reports.find((r) => r.id === id);
-    if (found) setReport(found);
-    else navigate("/");
+    if (found) {
+      // Backfill missing fields from older reports
+      if (!found.commodityRecommendations) found.commodityRecommendations = [];
+      if (found.assetAllocation.commodities === undefined) found.assetAllocation.commodities = 0;
+      setReport(found);
+    } else navigate("/");
   }, [id, navigate]);
 
   if (!report) return null;
