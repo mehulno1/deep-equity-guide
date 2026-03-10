@@ -287,6 +287,25 @@ const Research = () => {
           </div>
         </section>
 
+        {/* Number of Scripts/Funds */}
+        <section className="space-y-3">
+          <Label className="text-sm font-semibold text-foreground uppercase tracking-wider">
+            Number of Scripts / Funds
+          </Label>
+          <div className="flex flex-wrap gap-2">
+            {SCRIPT_COUNT_OPTIONS.map((opt) => (
+              <OptionPill
+                key={opt.value}
+                selected={form.scriptCount === opt.value}
+                onClick={() => setForm((p) => ({ ...p, scriptCount: opt.value }))}
+                subtitle={opt.desc}
+              >
+                {opt.label}
+              </OptionPill>
+            ))}
+          </div>
+        </section>
+
         {/* Submit */}
         <Card className="border-primary/20 bg-secondary/50">
           <CardContent className="p-6 flex flex-col items-center gap-4">
