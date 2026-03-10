@@ -3,13 +3,24 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Search } from "lucide-react";
+import { ArrowLeft, Search, Zap, TrendingUp, Shield, Brain } from "lucide-react";
 import { AssetType } from "@/types/investment";
 
 const ASSET_TYPE_OPTIONS: { value: AssetType; label: string }[] = [
   { value: "stock", label: "Stock" },
   { value: "mutual-fund", label: "Mutual Fund" },
   { value: "commodity", label: "Commodity" },
+];
+
+const TRENDING_ASSETS = [
+  { name: "Gold", type: "commodity" as AssetType },
+  { name: "TCS", type: "stock" as AssetType },
+  { name: "Jeera", type: "commodity" as AssetType },
+  { name: "Crude Oil", type: "commodity" as AssetType },
+  { name: "Reliance", type: "stock" as AssetType },
+  { name: "Infosys", type: "stock" as AssetType },
+  { name: "Silver", type: "commodity" as AssetType },
+  { name: "Nippon Small Cap", type: "mutual-fund" as AssetType },
 ];
 
 const QuickResearch = () => {
@@ -21,6 +32,13 @@ const QuickResearch = () => {
     if (!name.trim()) return;
     sessionStorage.setItem("quickResearchData", JSON.stringify({ name: name.trim(), assetType }));
     navigate(`/quick-report/${encodeURIComponent(name.trim())}`);
+  };
+
+  const handleTrendingClick = (asset: { name: string; type: AssetType }) => {
+    setName(asset.name);
+    setAssetType(asset.type);
+    sessionStorage.setItem("quickResearchData", JSON.stringify({ name: asset.name, assetType: asset.type }));
+    navigate(`/quick-report/${encodeURIComponent(asset.name)}`);
   };
 
   return (
@@ -36,8 +54,22 @@ const QuickResearch = () => {
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-bold text-foreground">Research a Specific Asset</h1>
           <p className="text-muted-foreground font-narrative">
-            Enter the name of any stock, mutual fund, commodity, metal, food grain, or currency to get a comprehensive deep-research report.
+            Get an AI-powered deep research report with fundamental, technical, and geopolitical analysis in seconds.
           </p>
+        </div>
+
+        {/* Trust indicators */}
+        <div className="flex flex-wrap justify-center gap-3">
+          {[
+            { icon: Brain, label: "AI-Powered" },
+            { icon: Zap, label: "Real-time Analysis" },
+            { icon: Shield, label: "5-Pillar Research" },
+          ].map(({ icon: Icon, label }) => (
+            <div key={label} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Icon className="h-3.5 w-3.5 text-primary" />
+              {label}
+            </div>
+          ))}
         </div>
 
         <section className="space-y-3">
@@ -72,6 +104,23 @@ const QuickResearch = () => {
           />
         </section>
 
+        {/* Trending assets */}
+        <section className="space-y-2">
+          <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Popular searches</p>
+          <div className="flex flex-wrap gap-2">
+            {TRENDING_ASSETS.map((asset) => (
+              <button
+                key={asset.name}
+                type="button"
+                onClick={() => handleTrendingClick(asset)}
+                className="px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card text-card-foreground hover:border-primary/40 hover:bg-secondary transition-all"
+              >
+                {asset.name}
+              </button>
+            ))}
+          </div>
+        </section>
+
         <Button
           size="lg"
           className="w-full h-14 text-base font-semibold rounded-lg shadow-lg shadow-primary/20"
@@ -79,7 +128,7 @@ const QuickResearch = () => {
           disabled={!name.trim()}
         >
           <Search className="mr-2 h-5 w-5" />
-          Generate Deep Research
+          Generate AI Research
         </Button>
       </main>
     </div>
