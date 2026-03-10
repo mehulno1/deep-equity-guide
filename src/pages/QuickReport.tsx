@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { QuickResearchReport, AssetType } from "@/types/investment";
 import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -21,6 +22,7 @@ const QuickReport = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loadingStep, setLoadingStep] = useState(0);
+  const [priceSource, setPriceSource] = useState<string>("ai-estimated");
 
   const loadingSteps = [
     "Analyzing market data...",
@@ -62,6 +64,7 @@ const QuickReport = () => {
         }
 
         setReport(functionData.report as QuickResearchReport);
+        setPriceSource(functionData.report?.priceSource || "ai-estimated");
       } catch (err: any) {
         console.error("Quick research error:", err);
         setError(err.message || "Failed to generate report");
@@ -153,6 +156,9 @@ const QuickReport = () => {
           <div>
             <p className="text-sm text-muted-foreground">Current Price</p>
             <p className="text-3xl font-mono font-bold text-foreground">{report.currentPrice}</p>
+            <Badge variant={priceSource === "yahoo-finance" ? "default" : "secondary"} className="mt-1 text-[10px]">
+              {priceSource === "yahoo-finance" ? "Live Price" : "AI Estimated"}
+            </Badge>
           </div>
           <Card className={`border ${vc.bg}`}>
             <CardContent className="p-4 flex items-center gap-3">
