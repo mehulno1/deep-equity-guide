@@ -14,6 +14,7 @@ import {
   MarketCap,
   GeoExposure,
   TaxRegime,
+  ScriptCount,
   SECTORS,
   Sector,
 } from "@/types/investment";

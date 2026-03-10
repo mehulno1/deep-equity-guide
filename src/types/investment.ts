@@ -13,6 +13,8 @@ export const SECTORS = [
 
 export type Sector = (typeof SECTORS)[number];
 
+export type ScriptCount = "auto" | "3" | "4" | "5" | "6" | "8" | "10";
+
 export interface InvestmentFormData {
   tenure: Tenure;
   amount: string;
@@ -23,6 +25,7 @@ export interface InvestmentFormData {
   geoExposure: GeoExposure;
   existingHoldings: string;
   taxRegime: TaxRegime;
+  scriptCount: ScriptCount;
 }
 
 export interface StockRecommendation {
