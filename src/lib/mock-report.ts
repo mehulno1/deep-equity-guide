@@ -134,7 +134,12 @@ export function generateMockReport(formData: InvestmentFormData): ResearchReport
     mfPct = 0;
   }
 
-  // Pick 3-4 stocks based on sector preference
+  // Determine count
+  const autoStockCount = formData.risk === "aggressive" ? 4 : 3;
+  const autoMFCount = formData.risk === "aggressive" ? 4 : 3;
+  const userCount = formData.scriptCount === "auto" ? null : parseInt(formData.scriptCount);
+
+  // Pick stocks based on sector preference
   let stocks = STOCK_DB;
   if (formData.sectors.length > 0) {
     const sectorFiltered = STOCK_DB.filter((s) =>
@@ -142,10 +147,10 @@ export function generateMockReport(formData: InvestmentFormData): ResearchReport
     );
     stocks = sectorFiltered.length >= 2 ? sectorFiltered : STOCK_DB;
   }
-  const selectedStocks = stocks.slice(0, formData.risk === "aggressive" ? 4 : 3);
+  const selectedStocks = stocks.slice(0, userCount ?? autoStockCount);
 
-  // Pick 2-3 MFs
-  const selectedMFs = MF_DB.slice(0, formData.risk === "aggressive" ? 4 : 3);
+  // Pick MFs
+  const selectedMFs = MF_DB.slice(0, userCount ?? autoMFCount);
 
   const riskLabel = formData.risk.charAt(0).toUpperCase() + formData.risk.slice(1);
   const tenureLabel =

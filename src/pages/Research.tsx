@@ -14,6 +14,7 @@ import {
   MarketCap,
   GeoExposure,
   TaxRegime,
+  ScriptCount,
   SECTORS,
   Sector,
 } from "@/types/investment";
@@ -54,6 +55,16 @@ const GEO_OPTIONS: { value: GeoExposure; label: string }[] = [
 const TAX_OPTIONS: { value: TaxRegime; label: string }[] = [
   { value: "old", label: "Old Regime" },
   { value: "new", label: "New Regime" },
+];
+
+const SCRIPT_COUNT_OPTIONS: { value: ScriptCount; label: string; desc?: string }[] = [
+  { value: "auto", label: "Let AI Decide", desc: "Best number based on your profile" },
+  { value: "3", label: "3" },
+  { value: "4", label: "4" },
+  { value: "5", label: "5" },
+  { value: "6", label: "6" },
+  { value: "8", label: "8" },
+  { value: "10", label: "10" },
 ];
 
 function OptionPill({
@@ -99,6 +110,7 @@ const Research = () => {
     geoExposure: "india",
     existingHoldings: "",
     taxRegime: "new",
+    scriptCount: "auto",
   });
 
   const toggleSector = (sector: Sector) => {
@@ -268,6 +280,25 @@ const Research = () => {
                 key={opt.value}
                 selected={form.taxRegime === opt.value}
                 onClick={() => setForm((p) => ({ ...p, taxRegime: opt.value }))}
+              >
+                {opt.label}
+              </OptionPill>
+            ))}
+          </div>
+        </section>
+
+        {/* Number of Scripts/Funds */}
+        <section className="space-y-3">
+          <Label className="text-sm font-semibold text-foreground uppercase tracking-wider">
+            Number of Scripts / Funds
+          </Label>
+          <div className="flex flex-wrap gap-2">
+            {SCRIPT_COUNT_OPTIONS.map((opt) => (
+              <OptionPill
+                key={opt.value}
+                selected={form.scriptCount === opt.value}
+                onClick={() => setForm((p) => ({ ...p, scriptCount: opt.value }))}
+                subtitle={opt.desc}
               >
                 {opt.label}
               </OptionPill>
